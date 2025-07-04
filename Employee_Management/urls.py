@@ -6,6 +6,10 @@ from django.conf import settings
 urlpatterns = [
 
     path('employee_management_handler/', employee_profile_api, name='employee_management'),
+    path('loan-details/', loan_details_api, name='loan_details'),
+    path('loan-documents/', loan_document_api),
+    path('salary/', SalaryAPIView.as_view(), name='salary-api'),
+    path('salary_documents/', salary_document_api, name='salary_document_api'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

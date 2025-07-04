@@ -4,13 +4,8 @@ from rest_framework.parsers import JSONParser
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
-# from Department.models import *
-# from Employee_Management.models import *
 from rest_framework.parsers import MultiPartParser, FormParser
-from django.http import HttpResponse, HttpRequest, JsonResponse
-from django.db import transaction, IntegrityError
-import re
-import random
+from django.http import HttpRequest, JsonResponse
 from rest_framework import status
 from .pagination import CustomPageNumberPagination  # Import your custom pagination class
 
@@ -30,7 +25,7 @@ def company_detail_api(request):
         else:
             companies = System_company_detail.objects.all()
             serializer = SystemCompanyDetailsSerializer(companies, many=True)
-            return JsonResponse(serializer.data)
+            return JsonResponse(serializer.data, safe=False)
 
     elif request.method == 'POST':
         serializer = SystemCompanyDetailsSerializer(data=request.data)

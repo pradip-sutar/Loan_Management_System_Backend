@@ -4,5 +4,5 @@ from .models import *
 
 @admin.register(System_company_detail)
 class SystemCompanyDetailsAdmin(admin.ModelAdmin):
-     list_display = ['companyid', 'name', 'contact_person_name','alias', 'email', 'mobileno', 'whatsappno','TAX_certificate']
+     list_display = ['companyid', 'name', 'contact_person_name','TAX_certificate','email', 'mobileno']
 

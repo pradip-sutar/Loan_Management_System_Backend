@@ -7,15 +7,15 @@ class SystemCompanyDetailsSerializer(serializers.ModelSerializer):
         model = System_company_detail
         fields = "__all__"
 
-class SystemCompanyBrandSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = System_brand_detail
-        fields = "__all__"
+# class SystemCompanyBrandSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = System_brand_detail
+#         fields = "__all__"
 
-class SystemContactDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = System_contact_detail
-        fields = '__all__'
+# class SystemContactDetailSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = System_contact_detail
+#         fields = '__all__'
 
 # class SystemSocialDetailSerializer(serializers.ModelSerializer):
 #     class Meta:
@@ -51,10 +51,10 @@ class SystemContactDetailSerializer(serializers.ModelSerializer):
 #         model = System_branch_contact
 #         fields = '__all__'
 
-class SystemBankDetailsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = System_bank_details
-        fields = '__all__'
+# class SystemBankDetailsSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = System_bank_details
+#         fields = '__all__'
 
 # class SystemBoardOfDirectorsSerializer(serializers.ModelSerializer):
 #     designation_name = serializers.CharField(source="designation.designation", read_only=True)

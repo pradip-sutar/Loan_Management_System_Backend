@@ -16,8 +16,8 @@ SECRET_KEY = 'django-insecure-s2t15la3dmjleevit5nb7$6ow5tk538#&be4#ac^6j0mjh81!7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*','crmlitebackend.vichaarlab.in']
-
+ALLOWED_HOSTS = ['*','crmlitebackend.vichaarlab.in','https://lvwjxl9l-8001.inc1.devtunnels.ms',
+]
 
 # Application definition
 
@@ -97,38 +97,38 @@ import os
 import shutil
 
 # Paths
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# --- DB paths ---
-local_db_path = os.path.join(BASE_DIR, "db.sqlite3")
+# # --- DB paths ---
+# local_db_path = os.path.join(BASE_DIR, "db.sqlite3")
 
-onedrive_base = os.path.expanduser("~/OneDrive")
-onedrive_db_folder = os.path.join(onedrive_base, "Database")
-onedrive_db_path = os.path.join(onedrive_db_folder, "db.sqlite3")
+# onedrive_base = os.path.expanduser("~/OneDrive")
+# onedrive_db_folder = os.path.join(onedrive_base, "Database")
+# onedrive_db_path = os.path.join(onedrive_db_folder, "db.sqlite3")
 
-# Logic: If OneDrive exists
-if os.path.exists(onedrive_base):
-    os.makedirs(onedrive_db_folder, exist_ok=True)
+# # Logic: If OneDrive exists
+# if os.path.exists(onedrive_base):
+#     os.makedirs(onedrive_db_folder, exist_ok=True)
 
-    if os.path.exists(local_db_path) and not os.path.exists(onedrive_db_path):
-        # Case: OneDrive newly added, copy existing local DB
-        try:
-            shutil.copy2(local_db_path, onedrive_db_path)
-            print("Copied local DB to OneDrive.")
-        except Exception as e:
-            print(f"Failed to copy DB to OneDrive: {e}")
+#     if os.path.exists(local_db_path) and not os.path.exists(onedrive_db_path):
+#         # Case: OneDrive newly added, copy existing local DB
+#         try:
+#             shutil.copy2(local_db_path, onedrive_db_path)
+#             print("Copied local DB to OneDrive.")
+#         except Exception as e:
+#             print(f"Failed to copy DB to OneDrive: {e}")
     
-    # Use OneDrive DB
-    db_path = onedrive_db_path
-else:
-    # Fallback: use local DB
-    db_path = local_db_path
+#     # Use OneDrive DB
+#     db_path = onedrive_db_path
+# else:
+#     # Fallback: use local DB
+#     db_path = local_db_path
 
 # Django DATABASES setting
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': db_path,
+        'NAME': os.path.join(BASE_DIR, "db.sqlite3"),
         'OPTIONS': {
             'timeout': 40,
         }
@@ -206,7 +206,9 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'https://crmlitebackend.vichaarlab.in',
     'http://dialurban.net',
-    # Add other trusted origins if necessary
+    'http://localhost:5173',
+    'http://localhost:8001'
+    # Add other trusted origins if necessary
 ]
 
 # Static files (CSS, JavaScript, Images)
