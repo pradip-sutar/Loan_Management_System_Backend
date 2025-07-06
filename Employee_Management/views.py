@@ -10,7 +10,6 @@ from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
-import pandas as pd
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from rest_framework.views import APIView
