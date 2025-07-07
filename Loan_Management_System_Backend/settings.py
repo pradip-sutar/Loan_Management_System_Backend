@@ -102,7 +102,7 @@ force_reset = os.getenv('RESET_DB', 'false').lower() == 'true'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 if getattr(sys, 'frozen', False):
-    app_data_dir = Path(os.getenv('APPDATA')) / 'Vichaarmart_POS'
+    app_data_dir = Path(os.getenv('APPDATA')) / 'Loan_Management_System_Backend'
     app_data_dir.mkdir(parents=True, exist_ok=True)
     db_path = app_data_dir / 'db.sqlite3'
 
@@ -214,7 +214,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")  # collectstatic will put fi
 
 MEDIA_URL = 'api/media/'
 if getattr(sys, 'frozen', False):
-    app_data_dir = Path(os.getenv('APPDATA')) / 'Vichaarmart_POS'
+    app_data_dir = Path(os.getenv('APPDATA')) / 'Loan_Management_System_Backend'
     app_data_dir.mkdir(parents=True, exist_ok=True)
     MEDIA_ROOT = app_data_dir / 'media'
 else:

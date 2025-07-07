@@ -4,3 +4,7 @@ dist
 build
 api
 media
+**/__pycache__/
+*/migrations/__pycache__
+__pycache__/
+*.py[cod]
