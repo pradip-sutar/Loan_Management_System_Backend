@@ -9,7 +9,7 @@ class Employee_profile(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     mobileno = models.BigIntegerField(null=True, blank=True)
     whatsapp = models.BigIntegerField(blank=True, null=True)
-    email = models.EmailField(unique=True, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
     adhaar = models.BigIntegerField(null=True, blank=True)
     PAN = models.CharField(max_length=255, null=True, blank=True)
     photo= models.ImageField(upload_to='profile_pics/', null=True, blank=True)
