@@ -199,7 +199,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://dialurban.net',
     ]
 
-AUTH_USER_MODEL = 'Authentication.User'
+# AUTH_USER_MODEL = 'Authentication.User'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # default
