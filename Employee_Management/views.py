@@ -49,7 +49,7 @@ def employee_profile_api(request):
                     balance = float(sal.get('balance') or 0)
                     if pay == 0:
                         sal['status'] = 'pending'
-                    elif pay == balance:
+                    elif balance == 0:
                         sal['status'] = 'paid'
                     else:
                         sal['status'] = 'partial'
