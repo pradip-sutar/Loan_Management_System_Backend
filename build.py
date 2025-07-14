@@ -10,7 +10,7 @@ from datetime import datetime
 import traceback
 
 # ---------- Version ----------
-APP_VERSION = "1.0.3"  # 🔁 Update this when you change version
+APP_VERSION = "1.0.4"  # 🔁 Update this when you change version
 
 # ---------- Path & Logging Setup ----------
 IS_FROZEN = getattr(sys, 'frozen', False)

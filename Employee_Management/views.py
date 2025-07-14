@@ -40,6 +40,7 @@ def employee_profile_api(request):
 
                 data['total_loan_amount'] = total_loan_sum
 
+
                 salaries = Salary.objects.filter(employee=employee)
                 salary_serializer = SalarySerializer(salaries, many=True)
                 salary_data = salary_serializer.data
@@ -48,11 +49,11 @@ def employee_profile_api(request):
                     pay = float(sal.get('pay') or 0)
                     balance = float(sal.get('balance') or 0)
                     if pay == 0:
-                        sal['status'] = 'pending'
-                    elif pay == balance:
-                        sal['status'] = 'paid'
+                        sal['status'] = 'PENDING'
+                    elif balance == 0:
+                        sal['status'] = 'PAID'
                     else:
-                        sal['status'] = 'partial'
+                        sal['status'] = 'PARTIAL'
 
                 data['salary_details'] = salary_data
 
@@ -66,7 +67,7 @@ def employee_profile_api(request):
                 return Response({'error': 'Employee not found'}, status=404)
 
         else:
-            employees = Employee_profile.objects.all()
+            employees = Employee_profile.objects.all().order_by('-empid')
 
             # 📌 Apply filters
             name = request.query_params.get('name')
@@ -129,15 +130,16 @@ def employee_profile_api(request):
                     salary_serializer = SalarySerializer(salaries, many=True)
                     salary_data = salary_serializer.data
 
+
                     for sal in salary_data:
                         pay = float(sal.get('pay') or 0)
                         balance = float(sal.get('balance') or 0)
                         if pay == 0:
-                            sal['status'] = 'pending'
+                            sal['status'] = 'PENDING'
                         elif balance == 0:
-                            sal['status'] = 'paid'
+                            sal['status'] = 'PAID'
                         else:
-                            sal['status'] = 'partial'
+                            sal['status'] = 'PARTIAL'
 
                     data['salary_details'] = salary_data
 
@@ -222,7 +224,7 @@ def loan_details_api(request):
             return Response(response)
 
         # === GET All Loans (with Filters & Pagination) ===
-        loans = LoanDetails.objects.select_related('employee').all()
+        loans = LoanDetails.objects.select_related('employee').all().order_by('-date')
 
         # 📌 Filters
         employee_name = request.query_params.get('employee_name')
