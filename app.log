@@ -1,0 +1,57 @@
+2025-07-07 12:15:47,250 - INFO - \U0001f4e6 Starting Loan_Management_System_Backend (version 1.0.0)
+2025-07-07 12:15:55,168 - INFO - \U0001f504 Migrations applied:
+Operations to perform:
+  Apply all migrations: Authentication, Employee_Management, System_Admin, admin, auth, authtoken, contenttypes, sessions
+Running migrations:
+  No migrations to apply.
+
+2025-07-07 12:15:55,174 - ERROR - \u274c Main process error: name 'run_asgi' is not defined
+2025-07-07 12:17:19,882 - INFO - \U0001f4e6 Starting Loan_Management_System_Backend (version 1.0.0)
+2025-07-07 12:17:21,399 - INFO - \u23e9 DB up-to-date. No migrations needed.
+2025-07-07 12:17:21,430 - INFO - \U0001f680 Starting WSGI server...
+2025-07-07 12:17:21,509 - INFO - \u2705 WSGI server running on http://0.0.0.0:8004 ...
+Not Found: /
+2025-07-07 12:17:47,055 - WARNING - Not Found: /
+127.0.0.1 - - [07/Jul/2025 12:17:47] "GET / HTTP/1.1" 404 2475
+Not Found: /favicon.ico
+2025-07-07 12:17:47,182 - WARNING - Not Found: /favicon.ico
+127.0.0.1 - - [07/Jul/2025 12:17:47] "GET /favicon.ico HTTP/1.1" 404 2526
+127.0.0.1 - - [07/Jul/2025 12:17:52] "GET /admin HTTP/1.1" 301 0
+127.0.0.1 - - [07/Jul/2025 12:17:52] "GET /admin/ HTTP/1.1" 302 0
+127.0.0.1 - - [07/Jul/2025 12:17:53] "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4177
+Not Found: /static/admin/css/base.css
+2025-07-07 12:17:53,052 - WARNING - Not Found: /static/admin/css/base.css
+127.0.0.1 - - [07/Jul/2025 12:17:53] "GET /static/admin/css/base.css HTTP/1.1" 404 2568
+Not Found: /static/admin/css/dark_mode.css
+2025-07-07 12:17:53,368 - WARNING - Not Found: /static/admin/css/dark_mode.css
+127.0.0.1 - - [07/Jul/2025 12:17:53] "GET /static/admin/css/dark_mode.css HTTP/1.1" 404 2583
+Not Found: /static/admin/css/nav_sidebar.css
+2025-07-07 12:17:53,376 - WARNING - Not Found: /static/admin/css/nav_sidebar.css
+127.0.0.1 - - [07/Jul/2025 12:17:53] "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 404 2589
+Not Found: /static/admin/css/login.css
+2025-07-07 12:17:53,386 - WARNING - Not Found: /static/admin/css/login.css
+127.0.0.1 - - [07/Jul/2025 12:17:53] "GET /static/admin/css/login.css HTTP/1.1" 404 2571
+Not Found: /static/admin/css/responsive.css
+2025-07-07 12:17:53,397 - WARNING - Not Found: /static/admin/css/responsive.css
+127.0.0.1 - - [07/Jul/2025 12:17:53] "GET /static/admin/css/responsive.css HTTP/1.1" 404 2586
+Not Found: /static/admin/js/theme.js
+2025-07-07 12:17:53,407 - WARNING - Not Found: /static/admin/js/theme.js
+127.0.0.1 - - [07/Jul/2025 12:17:53] "GET /static/admin/js/theme.js HTTP/1.1" 404 2565
+Not Found: /static/admin/css/nav_sidebar.css
+2025-07-07 12:17:53,715 - WARNING - Not Found: /static/admin/css/nav_sidebar.css
+127.0.0.1 - - [07/Jul/2025 12:17:53] "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 404 2589
+Not Found: /static/admin/css/login.css
+2025-07-07 12:17:53,726 - WARNING - Not Found: /static/admin/css/login.css
+127.0.0.1 - - [07/Jul/2025 12:17:53] "GET /static/admin/css/login.css HTTP/1.1" 404 2571
+Not Found: /static/admin/css/responsive.css
+2025-07-07 12:17:53,735 - WARNING - Not Found: /static/admin/css/responsive.css
+127.0.0.1 - - [07/Jul/2025 12:17:53] "GET /static/admin/css/responsive.css HTTP/1.1" 404 2586
+Not Found: /static/admin/js/nav_sidebar.js
+2025-07-07 12:17:53,745 - WARNING - Not Found: /static/admin/js/nav_sidebar.js
+127.0.0.1 - - [07/Jul/2025 12:17:53] "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 404 2583
+2025-07-07 12:18:26,279 - INFO - \U0001f6d1 Shutting down ASGI server...
+2025-07-07 15:43:20,975 - INFO - \U0001f4e6 Starting Loan_Management_System_Backend (version 1.0.0)
+2025-07-07 15:43:24,334 - INFO - \u23e9 DB up-to-date. No migrations needed.
+2025-07-07 15:43:24,412 - INFO - \U0001f680 Starting WSGI server...
+2025-07-07 15:43:24,571 - INFO - \u2705 WSGI server running on http://0.0.0.0:8004 ...
+2025-07-07 15:43:45,348 - INFO - \U0001f6d1 Shutting down ASGI server...

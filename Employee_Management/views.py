@@ -10,6 +10,7 @@ from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
+# import pandas as pd
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from rest_framework.views import APIView
@@ -133,7 +134,7 @@ def employee_profile_api(request):
                         balance = float(sal.get('balance') or 0)
                         if pay == 0:
                             sal['status'] = 'pending'
-                        elif pay == balance:
+                        elif balance == 0:
                             sal['status'] = 'paid'
                         else:
                             sal['status'] = 'partial'
@@ -415,18 +416,15 @@ def loan_document_api(request):
 
 class SalaryAPIView(APIView):
     def get(self, request):
-        # Get filter params
         empid = request.query_params.get('empid')
         name = request.query_params.get('name')
         department = request.query_params.get('department')
         designation = request.query_params.get('designation')
-        status_filter = request.query_params.get('status')
-        from_date = request.query_params.get('from_date')  # YYYY-MM-DD
-        to_date = request.query_params.get('to_date')      # YYYY-MM-DD
+        status_filter = request.query_params.get('status')  # 'paid', 'unpaid', 'partial', 'no salary'
+        from_date = request.query_params.get('from_date')
+        to_date = request.query_params.get('to_date')
 
-        # Filter employees first
         employees = Employee_profile.objects.all()
-
         if empid:
             employees = employees.filter(empid__iexact=empid)
         if name:
@@ -436,21 +434,14 @@ class SalaryAPIView(APIView):
         if designation:
             employees = employees.filter(designation__icontains=designation)
 
-        # Apply pagination only if not filtering by single empid
-        if not empid:
-            paginator = CustomPageNumberPagination()
-            employees = paginator.paginate_queryset(employees, request)
-
-        response_data = []
+        employee_results = []
 
         for emp in employees:
-            # Filter salaries based on date range
             salaries = Salary.objects.filter(employee=emp)
-
             if from_date:
-                salaries = salaries.filter(updated_at__date__gte=from_date)
+                salaries = salaries.filter(created_at__date__gte=from_date)
             if to_date:
-                salaries = salaries.filter(updated_at__date__lte=to_date)
+                salaries = salaries.filter(created_at__date__lte=to_date)
 
             salary_serialized = SalarySerializer(salaries, many=True).data
             filtered_salary = []
@@ -459,7 +450,6 @@ class SalaryAPIView(APIView):
                 pay = float(s.get('pay') or 0)
                 balance = float(s.get('balance') or 0)
 
-                # Compute status
                 if pay == 0:
                     s['status'] = 'unpaid'
                 elif balance == 0:
@@ -467,20 +457,23 @@ class SalaryAPIView(APIView):
                 else:
                     s['status'] = 'partial'
 
-                # Compute rest_amount
                 s['rest_amount'] = 0 if balance == 0 else max(balance - pay, 0)
 
-                # Apply status filter
                 if status_filter and s['status'] != status_filter:
                     continue
 
                 filtered_salary.append(s)
 
-            # ✅ Skip this employee if no salary in date range
-            if not filtered_salary:
+            # ✅ Skip if filtering by date and no salary found
+            if (from_date or to_date) and not filtered_salary:
                 continue
 
-            # Get latest loan details
+            # Compute status
+            computed_status = filtered_salary[-1]['status'] if filtered_salary else 'no salary'
+
+            if status_filter and computed_status != status_filter:
+                continue
+
             latest_loan = LoanDetails.objects.filter(employee=emp).order_by('-date').first()
             loan_serialized = None
             total_loan_amount = 0
@@ -490,7 +483,6 @@ class SalaryAPIView(APIView):
                 loan_serialized['total_loan'] = total
                 total_loan_amount = total
 
-            # Prepare employee data
             emp_data = {
                 "empid": emp.empid,
                 "name": emp.name,
@@ -500,19 +492,20 @@ class SalaryAPIView(APIView):
                 "designation": emp.designation,
                 "monthly_salary": emp.monthly_salary,
                 "status": emp.status,
+                "salary_status": computed_status,
                 "salary_details": filtered_salary,
                 "loan_details": loan_serialized,
                 "total_loan_amount": total_loan_amount,
             }
 
-            response_data.append(emp_data)
-
-        # Return paginated response if multiple employees
-        return (
-            paginator.get_paginated_response(response_data)
-            if not empid else Response(response_data)
-        )
-
+            employee_results.append(emp_data)
+        # Paginate final list
+        if not empid:
+            paginator = CustomPageNumberPagination()
+            paginated_employees = paginator.paginate_queryset(employee_results, request)
+            return paginator.get_paginated_response(paginated_employees)
+        else:
+            return Response(employee_results)
 
     def post(self, request):
         # Get employee_name from request

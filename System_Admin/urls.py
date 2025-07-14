@@ -1,11 +1,13 @@
 from django.contrib import admin
 from django.urls import path, include
-from System_Admin import views
+from .views import *
 from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
-    path('system_company_details_handler/', views.company_detail_api, name='system_company_details_handler'),
+    path('system_company_details_handler/', company_detail_api, name='system_company_details_handler'),
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
 
 ]
 

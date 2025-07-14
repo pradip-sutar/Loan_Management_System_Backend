@@ -54,7 +54,7 @@ class LoanDetails(models.Model):
     reason = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f"Loan for {self.employee.empid} on {self.date}"
+        return f"Loan for {self.salary_per_month}"
     
 class LoanDocument(models.Model):
     employee = models.ForeignKey(Employee_profile, on_delete=models.CASCADE, related_name='loan_documents')
@@ -81,6 +81,7 @@ class Salary(models.Model):
     pay = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='unpaid', null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.employee.empid if self.employee else 'Unknown'} - {self.pay_period}"

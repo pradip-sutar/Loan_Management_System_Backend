@@ -28,7 +28,7 @@ class LoanDocumentAdmin(admin.ModelAdmin):
 
 @admin.register(Salary)
 class SalaryAdmin(admin.ModelAdmin):
-    list_display = ('pay_period', 'employee', 'present_days', 'salary', 'salary_made', 'loan_taken', 'balance', 'pay', 'status')
+    list_display = ('pay_period', 'employee', 'present_days', 'salary', 'salary_made', 'loan_taken', 'balance', 'pay', 'status', 'created_at')
     search_fields = ('employee__empid', 'employee__name', 'pay_period')
 
 @admin.register(SalaryDocument)
