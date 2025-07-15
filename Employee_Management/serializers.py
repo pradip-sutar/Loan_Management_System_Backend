@@ -5,11 +5,7 @@ from .models import *
 class LoanDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = LoanDetails
-        fields = [
-            'id', 'employee', 'date', 'salary_per_month',
-            'loan_amount', 'previous_loan', 'total_loan',
-            'balance', 'reason'
-        ]
+        fields = "__all__"
 
 class LoanDocumentSerializer(serializers.ModelSerializer):
     # read‑only name of the employee

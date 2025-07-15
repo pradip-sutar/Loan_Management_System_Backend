@@ -224,7 +224,7 @@ def loan_details_api(request):
             return Response(response)
 
         # === GET All Loans (with Filters & Pagination) ===
-        loans = LoanDetails.objects.select_related('employee').all().order_by('-date')
+        loans = LoanDetails.objects.select_related('employee').all().order_by('-id')
 
         # 📌 Filters
         employee_name = request.query_params.get('employee_name')
@@ -290,16 +290,28 @@ def loan_details_api(request):
         data['employee'] = employee.empid  # FK expects empid
 
         serializer = LoanDetailsSerializer(data=data)
+        serializer = LoanDetailsSerializer(data=data)
         if serializer.is_valid():
-            loan = serializer.save()
+            loan_amount = data.get('loan_amount') or 0
+            loan_amount = int(loan_amount) if isinstance(loan_amount, str) else loan_amount
 
-            # Update employee total loan
-            employee.total_loan_amount += loan.loan_amount or 0
+            # Step 1: Update employee's total loan BEFORE saving loan
+            employee.total_loan_amount += loan_amount
             employee.save()
+
+            # Step 2: Inject updated balance manually before saving loan
+            serializer.save(
+                salary_per_month=employee.monthly_salary,
+                previous_loan=employee.total_loan_amount - loan_amount,
+                total_loan=employee.total_loan_amount,
+                updated_bal=employee.monthly_salary - employee.total_loan_amount
+            )
+
+            loan = serializer.instance
 
             response = serializer.data
             response['employeename'] = employee.name
-            response['total_loan'] = (loan.loan_amount or 0) + (loan.previous_loan or 0)
+            response['total_loan'] = loan.total_loan
             response['employee_details'] = {
                 'name': employee.name,
                 'designation': employee.designation,
@@ -310,7 +322,7 @@ def loan_details_api(request):
             }
 
             return Response({'message': 'Loan created', 'data': response}, status=201)
-        return Response(serializer.errors, status=400)
+
 
     # PUT
     elif request.method == 'PUT':

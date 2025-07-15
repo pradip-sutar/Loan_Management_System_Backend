@@ -49,9 +49,16 @@ class LoanDetails(models.Model):
     salary_per_month = models.BigIntegerField(null=True, blank=True)
     loan_amount = models.BigIntegerField(null=True, blank=True)
     previous_loan = models.BigIntegerField(default=0)
-    total_loan = models.BigIntegerField(null=True, blank=True)
+    total_loan = models.BigIntegerField(null=True, blank=True, default=0)
     balance = models.BigIntegerField(null=True, blank=True)
+    updated_bal = models.BigIntegerField(null=True, blank=True)
     reason = models.CharField(max_length=255, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.updated_bal:
+            print(f'monthly salary {self.employee.monthly_salary}, total loan amount {self.employee.total_loan_amount}')
+            self.updated_bal = self.employee.monthly_salary - self.employee.total_loan_amount
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Loan for {self.employee.empid} on {self.date}"
