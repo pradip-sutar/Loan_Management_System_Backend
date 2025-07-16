@@ -661,3 +661,55 @@ def salary_document_api(request):
             return Response(status=204)
         except SalaryDocument.DoesNotExist:
             return Response({'error': 'Document not found'}, status=404)
+        
+
+from django.db.models import Sum
+class EmployeeLoanEligibilityAPIView(APIView):
+    def get(self, request):
+        empid = request.query_params.get('empid')
+        if not empid:
+            return Response({"error": "Employee ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            employee = Employee_profile.objects.get(empid=empid)
+        except Employee_profile.DoesNotExist:
+            return Response({"error": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        salary_amount = employee.monthly_salary or 0
+
+        # Check the most recent salary entry (by pay_period or created_at)
+        last_salary = (
+            Salary.objects.filter(employee=employee)
+            .order_by("-created_at")
+            .first()
+        )
+
+        # If last salary status is "paid", show fresh eligibility
+        if last_salary and last_salary.status == "paid":
+            previous_loan = 0
+            total_loan = 0
+            eligible = True
+            remaining_eligibility = salary_amount
+        else:
+            # Otherwise calculate real loan usage
+            loan_summary = LoanDetails.objects.filter(employee=employee).aggregate(
+                total_loan_taken=Sum('loan_amount'),
+                previous_loan_amount=Sum('previous_loan')
+            )
+
+            total_loan = loan_summary['total_loan_taken'] or 0
+            previous_loan = loan_summary['previous_loan_amount'] or 0
+            remaining_eligibility = max(salary_amount - total_loan, 0)
+            eligible = total_loan <= salary_amount
+
+        data = {
+            "empid": employee.empid,
+            "name": employee.name,
+            "salary_per_month": salary_amount,
+            "previous_loan_amount": previous_loan,
+            "toal_loan_taken": total_loan,
+            "eligible": eligible,
+            "balance": remaining_eligibility
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
