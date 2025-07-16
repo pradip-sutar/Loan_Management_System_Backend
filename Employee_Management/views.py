@@ -48,10 +48,10 @@ def employee_profile_api(request):
                 for sal in salary_data:
                     pay = float(sal.get('pay') or 0)
                     balance = float(sal.get('balance') or 0)
+                    if balance == 0:
+                        sal['status'] = 'PAID'
                     if pay == 0:
                         sal['status'] = 'PENDING'
-                    elif balance == 0:
-                        sal['status'] = 'PAID'
                     else:
                         sal['status'] = 'PARTIAL'
 
@@ -134,6 +134,7 @@ def employee_profile_api(request):
                     for sal in salary_data:
                         pay = float(sal.get('pay') or 0)
                         balance = float(sal.get('balance') or 0)
+
                         if pay == 0:
                             sal['status'] = 'PENDING'
                         elif balance == 0:
@@ -221,7 +222,18 @@ def loan_details_api(request):
                 for doc in documents
             ]
 
+            # === Add Salary Info ===
+            try:
+                salary = Salary.objects.filter(employee=employee).latest('id')  # latest salary record
+                salary_data = SalarySerializer(salary).data
+                if salary.status == 'paid':
+                    salary_data['balance'] = "0.00"
+                response['salary_details'] = salary_data
+            except Salary.DoesNotExist:
+                response['salary_details'] = None
+
             return Response(response)
+
 
         # === GET All Loans (with Filters & Pagination) ===
         loans = LoanDetails.objects.select_related('employee').all().order_by('-id')
@@ -271,6 +283,16 @@ def loan_details_api(request):
                 for doc in documents
             ]
 
+            try:
+                salary = Salary.objects.filter(employee=employee).latest('id')
+                salary_data = SalarySerializer(salary).data
+                if salary.status == 'paid':
+                    salary_data['balance'] = "0.00"
+                    record['updated_bal'] = 0
+                record['salary_details'] = salary_data
+            except Salary.DoesNotExist:
+                record['salary_details'] = None
+
             data.append(record)
 
         return paginator.get_paginated_response(data)
@@ -295,6 +317,8 @@ def loan_details_api(request):
             loan_amount = data.get('loan_amount') or 0
             loan_amount = int(loan_amount) if isinstance(loan_amount, str) else loan_amount
 
+            previous_loan = employee.total_loan_amount or 0
+
             # Step 1: Update employee's total loan BEFORE saving loan
             employee.total_loan_amount += loan_amount
             employee.save()
@@ -302,13 +326,15 @@ def loan_details_api(request):
             # Step 2: Inject updated balance manually before saving loan
             serializer.save(
                 salary_per_month=employee.monthly_salary,
-                previous_loan=employee.total_loan_amount - loan_amount,
                 total_loan=employee.total_loan_amount,
-                updated_bal=employee.monthly_salary - employee.total_loan_amount
+                updated_bal=employee.monthly_salary - employee.total_loan_amount,
+                previous_loan = previous_loan
             )
 
+        
             loan = serializer.instance
 
+            previous_loan = data.get('previous_loan') or 0
             response = serializer.data
             response['employeename'] = employee.name
             response['total_loan'] = loan.total_loan
@@ -465,12 +491,12 @@ class SalaryAPIView(APIView):
                 pay = float(s.get('pay') or 0)
                 balance = float(s.get('balance') or 0)
 
-                if pay == 0:
-                    s['status'] = 'unpaid'
-                elif balance == 0:
-                    s['status'] = 'paid'
+                if balance == 0:
+                    s['status'] = 'PAID'
+                elif pay == 0:
+                    s['status'] = 'UNPAID'
                 else:
-                    s['status'] = 'partial'
+                    s['status'] = 'PARTIAL'
 
                 s['rest_amount'] = 0 if balance == 0 else max(balance - pay, 0)
 
@@ -489,7 +515,7 @@ class SalaryAPIView(APIView):
             if status_filter and computed_status != status_filter:
                 continue
 
-            latest_loan = LoanDetails.objects.filter(employee=emp).order_by('-date').first()
+            latest_loan = LoanDetails.objects.filter(employee=emp).order_by('-id').first()
             loan_serialized = None
             total_loan_amount = 0
             if latest_loan:
@@ -542,10 +568,10 @@ class SalaryAPIView(APIView):
         pay = float(salary_data.get('pay') or 0)
         balance = float(salary_data.get('balance') or 0)
 
-        if pay == 0:
-            salary_data['status'] = 'unpaid'
-        elif pay == balance:
+        if balance == 0.0:
             salary_data['status'] = 'paid'
+        elif pay == 0.0:
+            salary_data['status'] = 'unpaid'
         else:
             salary_data['status'] = 'partial'
             

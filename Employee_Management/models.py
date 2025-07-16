@@ -54,11 +54,10 @@ class LoanDetails(models.Model):
     updated_bal = models.BigIntegerField(null=True, blank=True)
     reason = models.CharField(max_length=255, null=True, blank=True)
 
-    def save(self, *args, **kwargs):
-        if not self.updated_bal:
-            print(f'monthly salary {self.employee.monthly_salary}, total loan amount {self.employee.total_loan_amount}')
-            self.updated_bal = self.employee.monthly_salary - self.employee.total_loan_amount
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if self.employee:
+    #         self.balance = self.employee.monthly_salary - self.employee.total_loan_amount
+    #     super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Loan for {self.employee.empid} on {self.date}"
@@ -73,9 +72,9 @@ class LoanDocument(models.Model):
     
 class Salary(models.Model):
     STATUS_CHOICES = (
-        ('paid', 'Paid'),
-        ('partial', 'Partial'),
-        ('unpaid', 'Unpaid'),
+        ('paid', 'PAID'),
+        ('partial', 'PARTIAL'),
+        ('unpaid', 'UNPAID'),
     )
 
     pay_period = models.CharField(max_length=100, null=True, blank=True)
