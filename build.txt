@@ -1,1 +1,1 @@
-pyinstaller --onefile --noconsole --add-data "template_db\db.sqlite3;template_db" --add-data "Loan_Management_System_Backend;Loan_Management_System_Backend" --add-data "staticfiles;staticfiles" --name loan_mngmnt_bcknd build.py
+pyinstaller --onedir --noconsole --add-data "template_db\db.sqlite3;template_db" --add-data "Loan_Management_System_Backend;Loan_Management_System_Backend" --add-data "staticfiles;staticfiles" --name loan_mngmnt_bcknd build.py

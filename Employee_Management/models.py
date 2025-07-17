@@ -53,6 +53,7 @@ class LoanDetails(models.Model):
     balance = models.BigIntegerField(null=True, blank=True)
     updated_bal = models.BigIntegerField(null=True, blank=True)
     reason = models.CharField(max_length=255, null=True, blank=True)
+    status = models.BooleanField(default=False)
 
     # def save(self, *args, **kwargs):
     #     if self.employee:

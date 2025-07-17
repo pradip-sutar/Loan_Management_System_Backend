@@ -317,23 +317,26 @@ def loan_details_api(request):
             loan_amount = data.get('loan_amount') or 0
             loan_amount = int(loan_amount) if isinstance(loan_amount, str) else loan_amount
 
-            previous_loan = employee.total_loan_amount or 0
+            # Unsettled previous loans
+            unsettled_loans = LoanDetails.objects.filter(employee=employee, status=False)
+            previous_loan_sum = unsettled_loans.aggregate(total=Sum('loan_amount'))['total'] or 0
 
-            # Step 1: Update employee's total loan BEFORE saving loan
-            employee.total_loan_amount += loan_amount
-            employee.save()
+            total_loan = loan_amount + previous_loan_sum
 
             # Step 2: Inject updated balance manually before saving loan
             serializer.save(
                 salary_per_month=employee.monthly_salary,
-                total_loan=employee.total_loan_amount,
-                updated_bal=employee.monthly_salary - employee.total_loan_amount,
-                previous_loan = previous_loan
+                total_loan=total_loan,
+                previous_loan = previous_loan_sum,
+                updated_bal=employee.monthly_salary - total_loan,
             )
 
-        
-            loan = serializer.instance
+            # ✅ Update total_loan_taken in Employee model
+            employee.total_loan_amount += loan_amount
+            employee.save(update_fields=['total_loan_amount'])
 
+
+            loan = serializer.instance
             previous_loan = data.get('previous_loan') or 0
             response = serializer.data
             response['employeename'] = employee.name
@@ -551,14 +554,19 @@ class SalaryAPIView(APIView):
     def post(self, request):
         # Get employee_name from request
         employee_name = request.data.get('employee_name')
+        loan_amount = request.data.get('loan_amount', 0)
         if not employee_name:
             return Response({"error": "employee_name is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
 
         try:
             employee = Employee_profile.objects.get(name__iexact=employee_name)
         except Employee_profile.DoesNotExist:
             return Response({"error": "Employee with this name does not exist."}, status=status.HTTP_404_NOT_FOUND)
 
+        if loan_amount > employee.monthly_salary:
+            return Response({"error": "Loan amount cannot exceed monthly salary."}, status=status.HTTP_400_BAD_REQUEST)
+        
         # Prepare data for serializer
         salary_data = request.data.copy()
         salary_data['employee'] = employee.empid  # Use empid for FK assignment
@@ -578,8 +586,9 @@ class SalaryAPIView(APIView):
 
         serializer = SalarySerializer(data=salary_data)
         if serializer.is_valid():
+            LoanDetails.objects.filter(employee=employee, status=False).update(status=True)
             serializer.save()
-            return Response({"message": "Salary created successfully", "data": serializer.data}, status=status.HTTP_201_CREATED)
+            return Response({"message": "Salary created successfully & All Loans were Settled !!", "data": serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
