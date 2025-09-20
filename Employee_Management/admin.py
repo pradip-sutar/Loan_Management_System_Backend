@@ -12,7 +12,7 @@ class EmpCompanyProfileAdmin(admin.ModelAdmin):
 
 @admin.register(LoanDetails)
 class LoanDetailsAdmin(admin.ModelAdmin):
-    list_display = ('id','employee', 'employee_name', 'date', 'loan_amount', 'balance', 'reason')
+    list_display = ('id','employee', 'employee_name', 'date', 'loan_amount', 'balance', 'reason','status')
     search_fields = ('employee__empid', 'employee__name')
     list_filter = ('date',)
 

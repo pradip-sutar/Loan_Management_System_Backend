@@ -48,10 +48,10 @@ def employee_profile_api(request):
                 for sal in salary_data:
                     pay = float(sal.get('pay') or 0)
                     balance = float(sal.get('balance') or 0)
+                    if balance == 0:
+                        sal['status'] = 'PAID'
                     if pay == 0:
                         sal['status'] = 'PENDING'
-                    elif balance == 0:
-                        sal['status'] = 'PAID'
                     else:
                         sal['status'] = 'PARTIAL'
 
@@ -134,6 +134,7 @@ def employee_profile_api(request):
                     for sal in salary_data:
                         pay = float(sal.get('pay') or 0)
                         balance = float(sal.get('balance') or 0)
+
                         if pay == 0:
                             sal['status'] = 'PENDING'
                         elif balance == 0:
@@ -221,10 +222,21 @@ def loan_details_api(request):
                 for doc in documents
             ]
 
+            # === Add Salary Info ===
+            try:
+                salary = Salary.objects.filter(employee=employee).latest('id')  # latest salary record
+                salary_data = SalarySerializer(salary).data
+                if salary.status == 'paid':
+                    salary_data['balance'] = "0.00"
+                response['salary_details'] = salary_data
+            except Salary.DoesNotExist:
+                response['salary_details'] = None
+
             return Response(response)
 
+
         # === GET All Loans (with Filters & Pagination) ===
-        loans = LoanDetails.objects.select_related('employee').all().order_by('-date')
+        loans = LoanDetails.objects.select_related('employee').all().order_by('-id')
 
         # 📌 Filters
         employee_name = request.query_params.get('employee_name')
@@ -271,6 +283,16 @@ def loan_details_api(request):
                 for doc in documents
             ]
 
+            try:
+                salary = Salary.objects.filter(employee=employee).latest('id')
+                salary_data = SalarySerializer(salary).data
+                if salary.status == 'paid':
+                    salary_data['balance'] = "0.00"
+                    record['updated_bal'] = 0
+                record['salary_details'] = salary_data
+            except Salary.DoesNotExist:
+                record['salary_details'] = None
+
             data.append(record)
 
         return paginator.get_paginated_response(data)
@@ -290,16 +312,35 @@ def loan_details_api(request):
         data['employee'] = employee.empid  # FK expects empid
 
         serializer = LoanDetailsSerializer(data=data)
+        serializer = LoanDetailsSerializer(data=data)
         if serializer.is_valid():
-            loan = serializer.save()
+            loan_amount = data.get('loan_amount') or 0
+            loan_amount = int(loan_amount) if isinstance(loan_amount, str) else loan_amount
 
-            # Update employee total loan
-            employee.total_loan_amount += loan.loan_amount or 0
-            employee.save()
+            # Unsettled previous loans
+            unsettled_loans = LoanDetails.objects.filter(employee=employee, status=False)
+            previous_loan_sum = unsettled_loans.aggregate(total=Sum('loan_amount'))['total'] or 0
 
+            total_loan = loan_amount + previous_loan_sum
+
+            # Step 2: Inject updated balance manually before saving loan
+            serializer.save(
+                salary_per_month=employee.monthly_salary,
+                total_loan=total_loan,
+                previous_loan = previous_loan_sum,
+                updated_bal=employee.monthly_salary - total_loan,
+            )
+
+            # ✅ Update total_loan_taken in Employee model
+            employee.total_loan_amount += loan_amount
+            employee.save(update_fields=['total_loan_amount'])
+
+
+            loan = serializer.instance
+            previous_loan = data.get('previous_loan') or 0
             response = serializer.data
             response['employeename'] = employee.name
-            response['total_loan'] = (loan.loan_amount or 0) + (loan.previous_loan or 0)
+            response['total_loan'] = loan.total_loan
             response['employee_details'] = {
                 'name': employee.name,
                 'designation': employee.designation,
@@ -310,7 +351,7 @@ def loan_details_api(request):
             }
 
             return Response({'message': 'Loan created', 'data': response}, status=201)
-        return Response(serializer.errors, status=400)
+
 
     # PUT
     elif request.method == 'PUT':
@@ -452,12 +493,12 @@ class SalaryAPIView(APIView):
                 pay = float(s.get('pay') or 0)
                 balance = float(s.get('balance') or 0)
 
-                if pay == 0:
-                    s['status'] = 'unpaid'
-                elif balance == 0:
-                    s['status'] = 'paid'
+                if balance == 0:
+                    s['status'] = 'PAID'
+                elif pay == 0:
+                    s['status'] = 'UNPAID'
                 else:
-                    s['status'] = 'partial'
+                    s['status'] = 'PARTIAL'
 
                 s['rest_amount'] = 0 if balance == 0 else max(balance - pay, 0)
 
@@ -476,7 +517,7 @@ class SalaryAPIView(APIView):
             if status_filter and computed_status != status_filter:
                 continue
 
-            latest_loan = LoanDetails.objects.filter(employee=emp).order_by('-date').first()
+            latest_loan = LoanDetails.objects.filter(employee=emp).order_by('-id').first()
             loan_serialized = None
             total_loan_amount = 0
             if latest_loan:
@@ -512,14 +553,19 @@ class SalaryAPIView(APIView):
     def post(self, request):
         # Get employee_name from request
         employee_name = request.data.get('employee_name')
+        loan_amount = request.data.get('loan_amount', 0)
         if not employee_name:
             return Response({"error": "employee_name is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
 
         try:
             employee = Employee_profile.objects.get(name__iexact=employee_name)
         except Employee_profile.DoesNotExist:
             return Response({"error": "Employee with this name does not exist."}, status=status.HTTP_404_NOT_FOUND)
 
+        if loan_amount > employee.monthly_salary:
+            return Response({"error": "Loan amount cannot exceed monthly salary."}, status=status.HTTP_400_BAD_REQUEST)
+        
         # Prepare data for serializer
         salary_data = request.data.copy()
         salary_data['employee'] = employee.empid  # Use empid for FK assignment
@@ -529,18 +575,19 @@ class SalaryAPIView(APIView):
         pay = float(salary_data.get('pay') or 0)
         balance = float(salary_data.get('balance') or 0)
 
-        if pay == 0:
-            salary_data['status'] = 'unpaid'
-        elif pay == balance:
+        if balance == 0.0:
             salary_data['status'] = 'paid'
+        elif pay == 0.0:
+            salary_data['status'] = 'unpaid'
         else:
             salary_data['status'] = 'partial'
             
 
         serializer = SalarySerializer(data=salary_data)
         if serializer.is_valid():
+            LoanDetails.objects.filter(employee=employee, status=False).update(status=True)
             serializer.save()
-            return Response({"message": "Salary created successfully", "data": serializer.data}, status=status.HTTP_201_CREATED)
+            return Response({"message": "Salary created successfully & All Loans were Settled !!", "data": serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
@@ -622,3 +669,55 @@ def salary_document_api(request):
             return Response(status=204)
         except SalaryDocument.DoesNotExist:
             return Response({'error': 'Document not found'}, status=404)
+        
+
+from django.db.models import Sum
+class EmployeeLoanEligibilityAPIView(APIView):
+    def get(self, request):
+        empid = request.query_params.get('empid')
+        if not empid:
+            return Response({"error": "Employee ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            employee = Employee_profile.objects.get(empid=empid)
+        except Employee_profile.DoesNotExist:
+            return Response({"error": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        salary_amount = employee.monthly_salary or 0
+
+        # Check the most recent salary entry (by pay_period or created_at)
+        last_salary = (
+            Salary.objects.filter(employee=employee)
+            .order_by("-created_at")
+            .first()
+        )
+
+        # If last salary status is "paid", show fresh eligibility
+        if last_salary and last_salary.status == "paid":
+            previous_loan = 0
+            total_loan = 0
+            eligible = True
+            remaining_eligibility = salary_amount
+        else:
+            # Otherwise calculate real loan usage
+            loan_summary = LoanDetails.objects.filter(employee=employee).aggregate(
+                total_loan_taken=Sum('loan_amount'),
+                previous_loan_amount=Sum('previous_loan')
+            )
+
+            total_loan = loan_summary['total_loan_taken'] or 0
+            previous_loan = loan_summary['previous_loan_amount'] or 0
+            remaining_eligibility = max(salary_amount - total_loan, 0)
+            eligible = total_loan <= salary_amount
+
+        data = {
+            "empid": employee.empid,
+            "name": employee.name,
+            "salary_per_month": salary_amount,
+            "previous_loan_amount": previous_loan,
+            "toal_loan_taken": total_loan,
+            "eligible": eligible,
+            "balance": remaining_eligibility
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
